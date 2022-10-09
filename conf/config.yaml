@@ -1,0 +1,14 @@
+address: 0.0.0.0
+port: 34568
+checkInterval: 5s
+notifyInhibition: 60
+repairTimes: 3
+notifyAddress: http://192.168.101.151:19074/alarmProvider/put
+groups:
+ - 192.168.101.20:34567->192.168.101.32:34567
+ - 192.168.101.21:34567->192.168.101.35:34567
+execFilename: oggWatchDog
+ssl:
+  cert: "./ogg.crt"
+  key: "./ogg.key"
+  ca: "./ca"

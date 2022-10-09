@@ -4,11 +4,16 @@ checkInterval: 5s
 notifyInhibition: 60
 repairTimes: 3
 notifyAddress: http://192.168.101.151:19074/alarmProvider/put
-groups:
- - 192.168.101.20:34567->192.168.101.32:34567
- - 192.168.101.21:34567->192.168.101.35:34567
+srcNodes:
+ - 01:192.168.101.20:34567
+ - 02:192.168.101.21:34567
+desNodes:
+ - 192.168.101.32:34567
+ - 192.168.101.35:34567
 execFilename: oggWatchDog
 ssl:
-  cert: "./ogg.crt"
-  key: "./ogg.key"
-  ca: "./ca"
+  cert: "./cert/ogg.crt"
+  key: "./cert/ogg.key"
+  ca: "./cert/ca"
+
+

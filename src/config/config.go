@@ -14,10 +14,11 @@ type RunConfig struct {
 	Ssl              Ssl           `yaml:"ssl"`
 	Port             string        `yaml:"port"`
 	NotifyAddress    string        `yaml:"notifyAddress"`
-	Groups           []string      `yaml:"groups"`
 	CheckInterval    time.Duration `yaml:"checkInterval"`
 	NotifyInhibition int           `yaml:"notifyInhibition"`
 	RepairTimes      int           `yaml:"repairTimes"`
+	SrcNodes         []string      `yaml:"srcNodes"`
+	DesNodes         []string      `yaml:"desNodes"`
 }
 
 type Ssl struct {
@@ -39,10 +40,10 @@ func defaultConfig() {
 
 }
 
-func ReadConfig() RunConfig {
+func ReadConfig(configName string) RunConfig {
 	defaultConfig()
 
-	viper.SetConfigFile("conf/config.yaml")
+	viper.SetConfigFile(configName)
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(fmt.Errorf("Fatal error config file: %w \n", err))
@@ -52,41 +53,42 @@ func ReadConfig() RunConfig {
 	return runConfig
 }
 
-func (r RunConfig) GetFather(chird string) (father string, err error) {
-	for _, client := range r.Groups {
-
-		group := shell.Awk(client, "\n")
-		point := shell.Awk(group[0], "->")
-		if point[1] == chird {
-			father = point[0]
-		}
-	}
-	return
-
-}
 
 func (r RunConfig) ConfigToClients() ([]notify.ClientInfo, error) {
 	var chunks []notify.ClientInfo
-	for _, client := range r.Groups {
 
-		group := shell.Awk(client, "\n")
-		point := shell.Awk(group[0], "->")
+	for _, client := range r.SrcNodes {
 
-		for _, x := range point {
-			a := shell.Awk(x, ":")
-			if len(a) != 2 {
+
+			a := shell.Awk(client, ":")
+			if len(a) != 3 {
 				return nil, fmt.Errorf("文件格式不对")
 			}
 
 			n := notify.ClientInfo{
-				IP:   a[0],
-				Port: a[1],
+				IP:   a[1],
+				Port: a[2],
 			}
 			chunks = append(chunks, n)
 
 		}
 
+	for _, client := range r.DesNodes {
+
+
+		a := shell.Awk(client, ":")
+		if len(a) != 2 {
+			return nil, fmt.Errorf("文件格式不对")
+		}
+
+		n := notify.ClientInfo{
+			IP:   a[0],
+			Port: a[1],
+		}
+		chunks = append(chunks, n)
+
 	}
+
 
 	return chunks, nil
 

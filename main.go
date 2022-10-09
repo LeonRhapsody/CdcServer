@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/LeonRhapsody/CdcServer/src/config"
 	"github.com/LeonRhapsody/CdcServer/src/notify"
+	"github.com/LeonRhapsody/CdcServer/src/shell"
 	"github.com/LeonRhapsody/CdcServer/src/webhook"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -48,17 +49,29 @@ func HttpCenter(runConfig config.RunConfig) {
 
 	err := route.RunTLS(listener, crt, key)
 	if err != nil {
-		return
+		log.Println(err)
 	}
 
 }
 
 func main() {
 
-	runConfig := config.ReadConfig()
+
+	runConfig := config.ReadConfig("conf/config.yaml")
+
+
+	fatherMap:=make(map[string]string)
+	for _, client := range runConfig.SrcNodes {
+		fatherID:=shell.Awk(client,":")[0]
+		fatherAddress:=shell.Awk(client,":")[1]+":"+shell.Awk(client,":")[2]
+		fatherMap[fatherID]=fatherAddress
+	}
+
+
 	notifyAddress := runConfig.NotifyAddress
 
 	clientList, err := runConfig.ConfigToClients()
+
 	if err != nil {
 		log.Println(err)
 		return
@@ -76,12 +89,12 @@ func main() {
 			NotifyInhibition: runConfig.NotifyInhibition,
 			RepairTimes:      runConfig.RepairTimes,
 		}
-		father, err := runConfig.GetFather(c.IP + ":" + c.Port)
+
 		if err != nil {
 			log.Println(err)
 		}
 		go w.Send()
-		go w.Repair(father)
+		go w.Repair(fatherMap)
 		go w.SendNotify(notifyAddress)
 
 	}

@@ -21,9 +21,12 @@ type WatchDog struct {
 }
 
 // Repair 修复已知问题
-func (w WatchDog) Repair(father string) {
+func (w WatchDog) Repair(fatherMap map[string]string) {
+
+
 	log.Printf("[%s] start repair thread", w.Client.IP)
 	for s := range w.RepairCh {
+
 		w.Mu.Lock()
 		w.RetryTimes[s.IP+s.Name]++ //进来就加1
 		w.Mu.Unlock()
@@ -45,6 +48,7 @@ func (w WatchDog) Repair(father string) {
 			case "EXTRACT":
 			case "REP":
 				if strings.Contains(s.Trace, "Bad column") {
+					father:=fatherMap[s.SysID]
 					w.Client.UpdateRepDefFile(father, s.Name)
 					log.Printf("cover %s error,update ogg struct define files,", s.Name)
 					w.Client.Reset()
@@ -67,6 +71,7 @@ func (w WatchDog) Send() {
 
 	log.Printf("[%s] start check thread", w.Client.IP)
 	ticker := time.NewTicker(w.CheckInterval) //压测
+
 
 	var cd CollectedData
 
